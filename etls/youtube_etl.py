@@ -5,7 +5,6 @@ from dateutil import parser
 import isodate
 from sqlalchemy import create_engine
 import pymysql
-import mysql.connector
 
 # Function that gets channel stats
 def get_channel_stats(youtube, handles):
@@ -140,53 +139,43 @@ def transform_data(video_df):
     return video_df2
 
 
-import mysql.connector
-from sqlalchemy import create_engine
-import pandas as pd
-
-
 def connect_to_db(host, user, password, database):
     try:
-        # Using mysql.connector for connection
-        connection = mysql.connector.connect(
+        # Create a pymysql connection for executing raw SQL
+        connection = pymysql.connect(
             host=host,
-            port = 3307,
             user=user,
             password=password,
-            database=database
+            db=database,
+            port=3307,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
         )
+        # Create an SQLAlchemy engine for DataFrame operations
+        engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}:3307/{database}?charset=utf8mb4")
         print("Connection established")
-
-        # Create SQLAlchemy engine for using with pandas
-        engine = create_engine(f"mysql://{user}:{password}@{host}:3307/{database}?charset=utf8mb4")
-
-        if connection.is_connected():
+        if connection.open:
             print("Connection is open")
         else:
             print("Connection is closed")
-        return connection, engine  # Return connection and engine for pandas
-    except mysql.connector.Error as err:  # Use mysql.connector's error handling
+        return connection, engine
+    except pymysql.MySQLError as err:
         print("An error occurred:", err)
         return None, None
 
-
-def insert_to_db(connection, engine, youtube_df, table_name, database):
+def insert_to_db(connection, youtube_df, engine, table_name, database):
     try:
+        # Use the pymysql connection to alter the database
         with connection.cursor() as cursor:
-            # Alter database to support utf8mb4
             alter_database_sql = f"ALTER DATABASE `{database}` CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;"
             cursor.execute(alter_database_sql)
         connection.commit()  # Commit the changes
-        print('Database and table charset changed to utf8mb4 successfully.')
-
-        # Use SQLAlchemy engine for pandas to_sql
-        youtube_df.to_sql(table_name, con=connection, if_exists='replace', index=False)
+        print("Database and table charset changed to utf8mb4 successfully.")
+        youtube_df.to_sql(table_name, engine, if_exists='replace', index=False)
         print("Data written to table.")
-
-    except mysql.connector.Error as err:  # Use mysql.connector's error handling
+    except pymysql.MySQLError as err:
         print("An error occurred:", err)
-
     finally:
-        if connection.is_connected():
+        if connection and connection.open:
             connection.close()
             print("Connection closed.")
