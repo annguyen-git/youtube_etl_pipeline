@@ -4,7 +4,7 @@
 This ETL pipeline extracts, transforms, and loads data from the YouTube API into a MySQL database and Amazon S3 storage. Using Apache Airflow, the pipeline automates data collection, transformation, and storage for efficient processing and retrieval, making it suitable for analysis and reporting purposes.
 
 ## Architecture
-![alt text](https://github.com/annguyen-git/youtube_etl_pipeline/blob/main/Architecture.png)
+![alt text](https://github.com/annguyen-git/youtube_etl_pipeline/blob/main/Architecture.jpg)
 
 - **YouTube API**: Data source for video metadata, statistics, and other channel information.
 - **Apache Airflow**: Orchestrates and schedules ETL tasks.
