@@ -10,7 +10,7 @@ This ETL pipeline extracts, transforms, and loads data from the YouTube API into
 - **Apache Airflow**: Orchestrates and schedules ETL tasks.
 - **MySQL**: Manages metadata and transformed data.
 - **Amazon S3**: Stores processed data for easy access and backup.
-- 
+
 Consider adding this:
 - **Amazon Redshift**: For data analytics.
 
